@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { addPost } from "../redux/features/postsSlice";
+import { addNewPost } from "../redux/features/postsSlice";
 import { getAllUsers } from "../redux/features/usersSlice";
 
 const AddPostForm = () => {
@@ -11,6 +11,7 @@ const AddPostForm = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [userId, setUserId] = useState("");
+  const [addRequestStatus, setAddRequestStatus] = useState("idle");
 
   const userOptions = users?.map((user) => (
     <option key={user.id} value={user.id}>
@@ -28,16 +29,25 @@ const AddPostForm = () => {
     setUserId(e.target.value);
   };
 
+  const canSubmit =
+    [title, content, userId].every(Boolean) && addRequestStatus === "idle";
+
   const handleSubmit = () => {
-    if (title && content && userId) {
-      dispatch(addPost(title, content, userId));
-      setTitle("");
-      setContent("");
-      setUserId("");
+    if (canSubmit) {
+      try {
+        setAddRequestStatus("pending");
+        dispatch(addNewPost({ title, body: content, userId })).unwrap();
+
+        setTitle("");
+        setContent("");
+        setUserId("");
+      } catch (error) {
+        console.log("Failed to submit the post", error);
+      } finally {
+        setAddRequestStatus("idle");
+      }
     }
   };
-
-  const canSubmit = Boolean(title) && Boolean(content) && Boolean(userId);
 
   return (
     <div>
